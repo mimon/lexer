@@ -57,21 +57,11 @@ TEST_CASE("Lexer Basics") {
 }
 
 TEST_CASE("A basic language") {
-  BasicLanguageTokens::RegexHandleMap re = {
-    make_pair(regex("\\s+"), [](std::smatch &match) {
-      return Token(Token::WHITESPACE);
-    }),
-    make_pair(regex("if|else|then"), [](std::smatch &match) {
-      return Token(Token::IF);
-    }),
-    make_pair(regex("(\\d+)"), [](std::smatch &match) {
-      int val = std::stoi(match[1]);
-      return IntValue(val);
-    }),
-    make_pair(regex("(\\w+)"), [](std::smatch &match) {
-      string s = match[0];
-      return IDToken(s);
-    })
+  BasicLanguageTokens::RegexHandleMap re  {
+    BasicLanguageTokens::regex_token_pair(regex("\\s+"), Token::WHITESPACE),
+    BasicLanguageTokens::regex_token_pair(regex("if|else|then"), Token::IF),
+    BasicLanguageTokens::regex_token_pair(regex("(\\d+)"), Token::INT),
+    BasicLanguageTokens::regex_token_pair(regex("(\\w+)"), Token::IDENT)
   };
 
   typedef BasicLanguageTokens::node node;
@@ -109,6 +99,9 @@ TEST_CASE("A basic language") {
     CHECK(n1.n == 2);
     CHECK(n2.p == 3);
     CHECK(n2.n == 2);
+
+    CHECK(n1.token.type == Token::IF);
+    CHECK(n2.token.type == Token::IF);
   }
 
   SECTION("linebreaks") {

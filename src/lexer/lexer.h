@@ -59,7 +59,7 @@ class Lexer {
     std::string::size_type p;   // index position of where it starts
     std::string::size_type n;   // length of the substring
     std::size_t            ri;  // the regex index of which regex it was generated from
-
+    T_Token                token;
     // Operators used for sorting nodes.
     // The sorting is based on the position and the
     // length of the nodes
@@ -71,8 +71,9 @@ class Lexer {
     }
   };
 
+  typedef std::pair<std::regex, T_Token> regex_token_pair;
   typedef std::vector<Tokenized> TokenList;
-  typedef std::vector<std::pair<std::regex, std::function<T_Token (std::smatch &)>>> RegexHandleMap;
+  typedef std::vector<std::pair<std::regex, T_Token> > RegexHandleMap;
 
   explicit Lexer(const RegexHandleMap& regexs)
     : regexs(regexs) {
@@ -103,6 +104,7 @@ class Lexer {
       n.p  = match.position();
       n.n  = match.length();
       n.ri = i;
+      n.token = this->regexs[i].second;
       this->nodes.push_back(n);
     }
   }
@@ -203,7 +205,7 @@ class Lexer {
       std::string                                     s(input.begin() + n.p, input.begin() + (n.p + n.n));
       std::regex_match(s, base_match, this->regexs[n.ri].first);
       auto arg = std::smatch(base_match);
-      T_Token token    { (this->regexs[n.ri].second)(arg) };
+      T_Token token    { this->regexs[n.ri].second};
       Tokenized data { token, n.n };;
       return data;
     });
