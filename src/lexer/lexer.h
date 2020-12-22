@@ -46,9 +46,12 @@ template <typename T_Token>
 class Lexer {
   public:
   struct Tokenized {
-    T_Token *token;
-    size_t   line, column;
+    T_Token  token;
+    //size_t   line, column;
     size_t   length;
+
+    Tokenized(T_Token token = T_Token(), std::size_t length = 0) :
+      token(token), length(length) {}
   };
 
   // A node is used to store information of a substring in the input string
@@ -69,9 +72,9 @@ class Lexer {
   };
 
   typedef std::vector<Tokenized> TokenList;
-  typedef std::vector<std::pair<std::regex, std::function<T_Token *(std::smatch &)>>> RegexHandleMap;
+  typedef std::vector<std::pair<std::regex, std::function<T_Token (std::smatch &)>>> RegexHandleMap;
 
-  Lexer(RegexHandleMap regexs)
+  explicit Lexer(const RegexHandleMap& regexs)
     : regexs(regexs) {
     reset();
     for (std::size_t i = 0; i < this->regexs.size(); ++i) {
@@ -80,9 +83,6 @@ class Lexer {
       n.n  = 0;
       n.ri = i;
     }
-  }
-
-  ~Lexer() {
   }
 
   /**
@@ -200,14 +200,11 @@ class Lexer {
     output.resize(this->nodes.size());
     std::transform(this->nodes.begin(), this->nodes.end(), output.begin(), [&input, this](const node &n) {
       std::match_results<std::string::const_iterator> base_match;
-      T_Token *                                       token;
       std::string                                     s(input.begin() + n.p, input.begin() + (n.p + n.n));
       std::regex_match(s, base_match, this->regexs[n.ri].first);
       auto arg = std::smatch(base_match);
-      token    = (this->regexs[n.ri].second)(arg);
-      Tokenized data;
-      data.token  = token;
-      data.length = n.n;
+      T_Token token    { (this->regexs[n.ri].second)(arg) };
+      Tokenized data { token, n.n };;
       return data;
     });
 

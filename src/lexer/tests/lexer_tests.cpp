@@ -12,10 +12,13 @@ struct Token {
     WHITESPACE,
     IDENT,
     INT,
-    IF,
+    IF
   };
   explicit Token(Type type)
     : type(type) {
+  }
+  explicit Token()
+    : type(Token::WHITESPACE) {
   }
 
   Type type;
@@ -56,18 +59,18 @@ TEST_CASE("Lexer Basics") {
 TEST_CASE("A basic language") {
   BasicLanguageTokens::RegexHandleMap re = {
     make_pair(regex("\\s+"), [](std::smatch &match) {
-      return new Token(Token::WHITESPACE);
+      return Token(Token::WHITESPACE);
     }),
     make_pair(regex("if|else|then"), [](std::smatch &match) {
-      return new Token(Token::IF);
+      return Token(Token::IF);
     }),
     make_pair(regex("(\\d+)"), [](std::smatch &match) {
       int val = std::stoi(match[1]);
-      return new IntValue(val);
+      return IntValue(val);
     }),
     make_pair(regex("(\\w+)"), [](std::smatch &match) {
       string s = match[0];
-      return new IDToken(s);
+      return IDToken(s);
     })
   };
 
@@ -81,7 +84,7 @@ TEST_CASE("A basic language") {
     BasicLanguageTokens::TokenList tokens;
     lexer.tokenize(script, tokens);
     REQUIRE(tokens.size() == 6);
-    REQUIRE(tokens[0].token->type == Token::WHITESPACE);
+    REQUIRE(tokens[0].token.type == Token::WHITESPACE);
   }
 
   SECTION("scan") {
@@ -215,17 +218,17 @@ TEST_CASE("A basic language") {
     BasicLanguageTokens::TokenList tokens;
     lexer.tokenize(str, tokens);
     REQUIRE(tokens.size() == 11);
-    CHECK(tokens[0].token->type == Token::IF);
-    CHECK(tokens[1].token->type == Token::WHITESPACE);
-    CHECK(tokens[2].token->type == Token::IDENT);
-    CHECK(tokens[3].token->type == Token::WHITESPACE);
-    CHECK(tokens[4].token->type == Token::IF);
-    CHECK(tokens[5].token->type == Token::WHITESPACE);
-    CHECK(tokens[6].token->type == Token::INT);
-    CHECK(tokens[7].token->type == Token::WHITESPACE);
-    CHECK(tokens[8].token->type == Token::IF);
-    CHECK(tokens[9].token->type == Token::WHITESPACE);
-    CHECK(tokens[10].token->type == Token::INT);
+    CHECK(tokens[0].token.type == Token::IF);
+    CHECK(tokens[1].token.type == Token::WHITESPACE);
+    CHECK(tokens[2].token.type == Token::IDENT);
+    CHECK(tokens[3].token.type == Token::WHITESPACE);
+    CHECK(tokens[4].token.type == Token::IF);
+    CHECK(tokens[5].token.type == Token::WHITESPACE);
+    CHECK(tokens[6].token.type == Token::INT);
+    CHECK(tokens[7].token.type == Token::WHITESPACE);
+    CHECK(tokens[8].token.type == Token::IF);
+    CHECK(tokens[9].token.type == Token::WHITESPACE);
+    CHECK(tokens[10].token.type == Token::INT);
   }
 
   SECTION("Some more complex input") {
@@ -236,17 +239,17 @@ TEST_CASE("A basic language") {
     BasicLanguageTokens::TokenList tokens;
     lexer.tokenize(str, tokens);
     REQUIRE(tokens.size() == 11);
-    CHECK(tokens[0].token->type == Token::IF);
-    CHECK(tokens[1].token->type == Token::WHITESPACE);
-    CHECK(tokens[2].token->type == Token::IDENT);
-    CHECK(tokens[3].token->type == Token::WHITESPACE);
-    CHECK(tokens[4].token->type == Token::IF);
-    CHECK(tokens[5].token->type == Token::WHITESPACE);
-    CHECK(tokens[6].token->type == Token::INT);
-    CHECK(tokens[7].token->type == Token::WHITESPACE);
-    CHECK(tokens[8].token->type == Token::IF);
-    CHECK(tokens[9].token->type == Token::WHITESPACE);
-    CHECK(tokens[10].token->type == Token::INT);
+    CHECK(tokens[0].token.type == Token::IF);
+    CHECK(tokens[1].token.type == Token::WHITESPACE);
+    CHECK(tokens[2].token.type == Token::IDENT);
+    CHECK(tokens[3].token.type == Token::WHITESPACE);
+    CHECK(tokens[4].token.type == Token::IF);
+    CHECK(tokens[5].token.type == Token::WHITESPACE);
+    CHECK(tokens[6].token.type == Token::INT);
+    CHECK(tokens[7].token.type == Token::WHITESPACE);
+    CHECK(tokens[8].token.type == Token::IF);
+    CHECK(tokens[9].token.type == Token::WHITESPACE);
+    CHECK(tokens[10].token.type == Token::INT);
   }
 
   SECTION("Some errornous input") {
