@@ -41,9 +41,9 @@ struct IntValue : public ValueBase {
   int value;
 };
 
-typedef compiler::Lexer<Token> BasicLanguageTokens;
+typedef compiler::lexer<Token> BasicLanguageTokens;
 
-TEST_CASE("Lexer Basics") {
+TEST_CASE("lexer Basics") {
 
   SECTION("Understanding c++ regexs") {
     std::string input =

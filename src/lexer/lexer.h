@@ -43,7 +43,7 @@ typedef std::vector<LexError> LexErrorList;
  * most characters of the substring will be picked.
  */
 template <typename T_Token>
-class Lexer {
+class lexer {
   public:
   struct Tokenized {
     T_Token  token;
@@ -76,7 +76,7 @@ class Lexer {
   typedef std::vector<node> node_vector;
   typedef std::vector<std::pair<std::regex, T_Token> > RegexHandleMap;
 
-  explicit Lexer(const RegexHandleMap& regexs)
+  explicit lexer(const RegexHandleMap& regexs)
     : regexs(regexs) {
     reset();
     for (std::size_t i = 0; i < this->regexs.size(); ++i) {
