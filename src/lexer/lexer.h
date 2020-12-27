@@ -40,7 +40,7 @@ struct generic_lexer_node {
   // The sorting is based on the position and the
   // length of the nodes
   friend bool operator<(const generic_lexer_node &a, const generic_lexer_node &b) {
-    return (a.p < b.p) || ((a.p == b.p) && (a.n > b.n));
+    return (a.p < b.p) || ((a.p == b.p) && (a.ri < b.ri));
   }
   friend bool operator>(const generic_lexer_node &a, const generic_lexer_node &b) {
     return b < a;

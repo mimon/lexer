@@ -8,10 +8,10 @@
 using namespace std;
 
 enum token {
-  whitespace,
-  identifier,
-  integer,
   if_statement,
+  integer,
+  identifier,
+  whitespace,
   number_of_tokens
 };
 
@@ -33,7 +33,7 @@ TEST_CASE("A basic language") {
   lexer::regex_vector tokens(number_of_tokens);
 
   tokens[token::whitespace] = regex("\\s+");
-  tokens[token::if_statement] = regex("if|else|then");
+  tokens[token::if_statement] = regex("\\bif|else|then\\b");
   tokens[token::integer] = regex("(\\d+)");
   tokens[token::identifier] = regex("(\\w+)");
 
@@ -51,7 +51,7 @@ TEST_CASE("A basic language") {
   SECTION("scan") {
     string              script = "if not";
     REQUIRE(lexer.nodes.size() == 0);
-    lexer.scan(0, script);
+    lexer.scan(token::whitespace, script);
     REQUIRE(lexer.nodes.size() == 1);
     lexer::generic_lexer_node n1 = lexer.nodes[0];
     CHECK(n1.p == 2);
@@ -103,7 +103,7 @@ TEST_CASE("A basic language") {
     lexer.scan(token::whitespace, script);
     lexer.scan(token::if_statement, script);
     lexer.scan(token::identifier, script);
-    REQUIRE(lexer.nodes.size() == 5);
+    REQUIRE(lexer.nodes.size() == 4);
 
     lexer.sort();
 
@@ -170,24 +170,24 @@ TEST_CASE("A basic language") {
     CHECK(n2.ri == token::whitespace);
   }
 
-  // SECTION("Some more complex input") {
-  //   string str =
-  //       "if somevar then 1 else 2";
+  SECTION("Some more complex input") {
+    string str =
+        "if somevar then 1 else 2";
 
-  //   lexer.tokenize(str);
-  //   REQUIRE(lexer.nodes.size() == 11);
-  //   CHECK(lexer.nodes[0].ri == token::if_statement);
-  //   CHECK(lexer.nodes[1].ri == token::whitespace);
-  //   CHECK(lexer.nodes[2].ri == token::identifier);
-  //   CHECK(lexer.nodes[3].ri == token::whitespace);
-  //   CHECK(lexer.nodes[4].ri == token::if_statement);
-  //   CHECK(lexer.nodes[5].ri == token::whitespace);
-  //   CHECK(lexer.nodes[6].ri == token::integer);
-  //   CHECK(lexer.nodes[7].ri == token::whitespace);
-  //   CHECK(lexer.nodes[8].ri == token::if_statement);
-  //   CHECK(lexer.nodes[9].ri == token::whitespace);
-  //   CHECK(lexer.nodes[10].ri == token::integer);
-  // }
+    lexer.tokenize(str);
+    REQUIRE(lexer.nodes.size() == 11);
+    CHECK(lexer.nodes[0].ri == token::if_statement);
+    CHECK(lexer.nodes[1].ri == token::whitespace);
+    CHECK(lexer.nodes[2].ri == token::identifier);
+    CHECK(lexer.nodes[3].ri == token::whitespace);
+    CHECK(lexer.nodes[4].ri == token::if_statement);
+    CHECK(lexer.nodes[5].ri == token::whitespace);
+    CHECK(lexer.nodes[6].ri == token::integer);
+    CHECK(lexer.nodes[7].ri == token::whitespace);
+    CHECK(lexer.nodes[8].ri == token::if_statement);
+    CHECK(lexer.nodes[9].ri == token::whitespace);
+    CHECK(lexer.nodes[10].ri == token::integer);
+  }
 
   // SECTION("Some more complex input") {
   //   string str =
