@@ -1,5 +1,5 @@
 //
-//  CSSLexer.h
+//  CSSlexer.h
 //
 //
 //  Created by Simon Warg on 27/11/15.
@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace compiler {
+namespace lexer {
 
 struct LexError {
 
@@ -31,6 +31,25 @@ struct LexError {
 
 typedef std::vector<LexError> LexErrorList;
 
+// A node is used to store information of a substring in the input string
+struct generic_lexer_node {
+  std::string::size_type p;   // index position of where it starts
+  std::string::size_type n;   // length of the substring
+  std::size_t            ri;  // the regex index of which regex it was generated from
+  // Operators used for sorting nodes.
+  // The sorting is based on the position and the
+  // length of the nodes
+  friend bool operator<(const generic_lexer_node &a, const generic_lexer_node &b) {
+    return (a.p < b.p) || ((a.p == b.p) && (a.n > b.n));
+  }
+  friend bool operator>(const generic_lexer_node &a, const generic_lexer_node &b) {
+    return b < a;
+  }
+};
+
+typedef std::vector<std::regex> regex_vector;
+typedef std::vector<generic_lexer_node> node_vector;
+
 /**
  * The lexer can be used to chop up an input string into to
  * user-defined C++ tokens. The lexer is constructed by a
@@ -42,45 +61,16 @@ typedef std::vector<LexError> LexErrorList;
  * matches for any given substring, then the regex matching the
  * most characters of the substring will be picked.
  */
-template <typename T_Token>
-class lexer {
+class generic_lexer {
   public:
-  struct Tokenized {
-    T_Token  token;
-    //size_t   line, column;
-    size_t   length;
 
-    Tokenized(T_Token token = T_Token(), std::size_t length = 0) :
-      token(token), length(length) {}
-  };
 
-  // A node is used to store information of a substring in the input string
-  struct node {
-    std::string::size_type p;   // index position of where it starts
-    std::string::size_type n;   // length of the substring
-    std::size_t            ri;  // the regex index of which regex it was generated from
-    T_Token                token;
-    // Operators used for sorting nodes.
-    // The sorting is based on the position and the
-    // length of the nodes
-    friend bool operator<(const node &a, const node &b) {
-      return (a.p < b.p) || ((a.p == b.p) && (a.n > b.n));
-    }
-    friend bool operator>(const node &a, const node &b) {
-      return b < a;
-    }
-  };
 
-  typedef std::pair<std::regex, T_Token> regex_token_pair;
-  typedef std::vector<Tokenized> TokenList;
-  typedef std::vector<node> node_vector;
-  typedef std::vector<std::pair<std::regex, T_Token> > RegexHandleMap;
-
-  explicit lexer(const RegexHandleMap& regexs)
+  explicit generic_lexer(const regex_vector& regexs)
     : regexs(regexs) {
     reset();
     for (std::size_t i = 0; i < this->regexs.size(); ++i) {
-      node n;
+      generic_lexer_node n;
       n.p  = 0;
       n.n  = 0;
       n.ri = i;
@@ -94,18 +84,17 @@ class lexer {
    * @param std::string &s            the string to search
    */
   void scan(std::size_t i, const std::string &s) {
-    std::regex &regex = this->regexs[i].first;
+    std::regex &regex = this->regexs[i];
     auto        begin =
         std::sregex_iterator(s.begin(), s.end(), regex);
     auto end = std::sregex_iterator();
 
     for (std::sregex_iterator i2 = begin; i2 != end; ++i2) {
       std::smatch match = *i2;
-      node        n;
+      generic_lexer_node        n;
       n.p  = match.position();
       n.n  = match.length();
       n.ri = i;
-      n.token = this->regexs[i].second;
       this->nodes.push_back(n);
     }
   }
@@ -120,8 +109,8 @@ class lexer {
       return;
     }
     std::sort(this->nodes.begin(), this->nodes.end());
-    node prev = this->nodes[0];
-    auto end  = std::remove_if(this->nodes.begin() + 1, this->nodes.end(), [&prev](const node &cur) {
+    generic_lexer_node prev = this->nodes[0];
+    auto end  = std::remove_if(this->nodes.begin() + 1, this->nodes.end(), [&prev](const generic_lexer_node &cur) {
       bool remove = cur.p < (prev.p + prev.n);
       if (!remove) {
         prev = cur;
@@ -169,14 +158,14 @@ class lexer {
    * @return {[type]} [description]
    */
   void scan_errors() {
-    node prev;
+    generic_lexer_node prev;
     prev.p = 0;
     prev.n = 0;
     for (auto &it : this->nodes) {
       std::size_t should_be_next = (prev.p + prev.n);
       if (it.p != should_be_next) {
         // error
-        node error;
+        generic_lexer_node error;
         error.p = should_be_next;
         error.n = it.p - should_be_next;
         this->error_nodes.push_back(error);
@@ -185,10 +174,8 @@ class lexer {
     }
   }
 
-  void tokenize(const std::string &input, TokenList &output) {
+  void tokenize(const std::string &input) {
     reset();
-
-    std::match_results<std::string::const_iterator> base_match;
 
     // Collect all regex results and store them as nodes
     for (std::size_t i = 0; i < this->regexs.size(); ++i) {
@@ -197,19 +184,6 @@ class lexer {
     // Sort the container. This will pick the longest spanning
     // nodes for each character position in the input string
     sort();
-
-    // Transform each node to a Tokenized data type
-    output.reserve(this->nodes.size());
-    output.resize(this->nodes.size());
-    std::transform(this->nodes.begin(), this->nodes.end(), output.begin(), [&input, this](const node &n) {
-      std::match_results<std::string::const_iterator> base_match;
-      std::string                                     s(input.begin() + n.p, input.begin() + (n.p + n.n));
-      std::regex_match(s, base_match, this->regexs[n.ri].first);
-      auto arg = std::smatch(base_match);
-      T_Token token    { this->regexs[n.ri].second};
-      Tokenized data { token, n.n };;
-      return data;
-    });
 
     // Even though we may output valid tokens, the
     // input string may be inconsistent or contain
@@ -222,7 +196,7 @@ class lexer {
     this->error_nodes.clear();
   }
 
-  RegexHandleMap    regexs;
+  regex_vector    regexs;
   node_vector nodes, error_nodes;
 };
 }
