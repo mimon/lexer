@@ -73,6 +73,7 @@ class Lexer {
 
   typedef std::pair<std::regex, T_Token> regex_token_pair;
   typedef std::vector<Tokenized> TokenList;
+  typedef std::vector<node> node_vector;
   typedef std::vector<std::pair<std::regex, T_Token> > RegexHandleMap;
 
   explicit Lexer(const RegexHandleMap& regexs)
@@ -92,7 +93,7 @@ class Lexer {
    * @param std::size_t i             the index of the regex
    * @param std::string &s            the string to search
    */
-  void scan(std::size_t i, std::string &s) {
+  void scan(std::size_t i, const std::string &s) {
     std::regex &regex = this->regexs[i].first;
     auto        begin =
         std::sregex_iterator(s.begin(), s.end(), regex);
@@ -184,7 +185,7 @@ class Lexer {
     }
   }
 
-  void tokenize(std::string &input, TokenList &output) {
+  void tokenize(const std::string &input, TokenList &output) {
     reset();
 
     std::match_results<std::string::const_iterator> base_match;
@@ -222,6 +223,6 @@ class Lexer {
   }
 
   RegexHandleMap    regexs;
-  std::vector<node> nodes, error_nodes;
+  node_vector nodes, error_nodes;
 };
 }
