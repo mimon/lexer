@@ -54,12 +54,6 @@ class generic_lexer {
   explicit generic_lexer(const regex_vector& regexs)
     : regexs(regexs) {
     reset();
-    for (std::size_t i = 0; i < this->regexs.size(); ++i) {
-      generic_lexer_node n;
-      n.p  = 0;
-      n.n  = 0;
-      n.ri = i;
-    }
   }
 
   /**
@@ -69,7 +63,7 @@ class generic_lexer {
    * @param std::string &s            the string to search
    */
   void scan(std::size_t i, const std::string &s) {
-    std::regex &regex = this->regexs[i];
+    const std::regex &regex = this->regexs[i];
     auto        begin =
         std::sregex_iterator(s.begin(), s.end(), regex);
     auto end = std::sregex_iterator();
@@ -181,7 +175,7 @@ class generic_lexer {
     this->error_nodes.clear();
   }
 
-  regex_vector    regexs;
+  const regex_vector&    regexs;
   node_vector nodes, error_nodes;
 };
 }
