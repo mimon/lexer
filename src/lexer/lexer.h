@@ -19,18 +19,6 @@
 
 namespace lexer {
 
-struct LexError {
-
-  unsigned long line, column;
-  std::string   message;
-
-  const char *what() const noexcept {
-    return message.c_str();
-  }
-};
-
-typedef std::vector<LexError> LexErrorList;
-
 // A node is used to store information of a substring in the input string
 struct generic_lexer_node {
   std::string::size_type p;   // index position of where it starts
@@ -63,9 +51,6 @@ typedef std::vector<generic_lexer_node> node_vector;
  */
 class generic_lexer {
   public:
-
-
-
   explicit generic_lexer(const regex_vector& regexs)
     : regexs(regexs) {
     reset();
