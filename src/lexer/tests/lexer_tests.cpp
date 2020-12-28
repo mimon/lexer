@@ -33,7 +33,7 @@ TEST_CASE("A basic language") {
   lexer::regex_vector tokens(number_of_tokens);
 
   tokens[token::whitespace] = regex("\\s+");
-  tokens[token::if_statement] = regex("\\bif|else|then\\b");
+  tokens[token::if_statement] = regex("\\b(if|else|then)\\b");
   tokens[token::integer] = regex("(\\d+)");
   tokens[token::identifier] = regex("(\\w+)");
 
@@ -189,45 +189,41 @@ TEST_CASE("A basic language") {
     CHECK(lexer.nodes[10].ri == token::integer);
   }
 
-  // SECTION("Some more complex input") {
-  //   string str =
-  //       "if ifif then 1 else 2";
+  SECTION("Some more complex input") {
+    string str =
+        "if ifif then 1 else 2";
 
-  //   BasicLanguageTokens            lexer(re);
-  //   BasicLanguageTokens::TokenList tokens;
-  //   lexer.tokenize(str, tokens);
-  //   REQUIRE(tokens.size() == 11);
-  //   CHECK(tokens[0].token.type == token::if_statement);
-  //   CHECK(tokens[1].token.type == token::whitespace);
-  //   CHECK(tokens[2].token.type == token::identifier);
-  //   CHECK(tokens[3].token.type == token::whitespace);
-  //   CHECK(tokens[4].token.type == token::if_statement);
-  //   CHECK(tokens[5].token.type == token::whitespace);
-  //   CHECK(tokens[6].token.type == token::integer);
-  //   CHECK(tokens[7].token.type == token::whitespace);
-  //   CHECK(tokens[8].token.type == token::if_statement);
-  //   CHECK(tokens[9].token.type == token::whitespace);
-  //   CHECK(tokens[10].token.type == token::integer);
-  // }
+    lexer.tokenize(str);
+    REQUIRE(lexer.nodes.size() == 11);
+    CHECK(lexer.nodes[0].ri == token::if_statement);
+    CHECK(lexer.nodes[1].ri == token::whitespace);
+    CHECK(lexer.nodes[2].ri == token::identifier);
+    CHECK(lexer.nodes[3].ri == token::whitespace);
+    CHECK(lexer.nodes[4].ri == token::if_statement);
+    CHECK(lexer.nodes[5].ri == token::whitespace);
+    CHECK(lexer.nodes[6].ri == token::integer);
+    CHECK(lexer.nodes[7].ri == token::whitespace);
+    CHECK(lexer.nodes[8].ri == token::if_statement);
+    CHECK(lexer.nodes[9].ri == token::whitespace);
+    CHECK(lexer.nodes[10].ri == token::integer);
+  }
 
-  // SECTION("Some errornous input") {
-  //   string str =
-  //       "if var then 1 else 2\n"
-  //       "if ??? then x\n"
-  //       "if var then 10\n"
-  //       "if var then 10\n";
+  SECTION("Some errornous input") {
+    string str =
+        "if var then 1 else 2\n"
+        "if ??? then x\n"
+        "if var then 10\n"
+        "if var then 10\n";
 
-  //   BasicLanguageTokens            lexer(re);
-  //   BasicLanguageTokens::TokenList tokens;
-  //   lexer.scan(0, str);
-  //   lexer.scan(1, str);
-  //   lexer.scan(2, str);
-  //   lexer.scan(3, str);
-  //   lexer.sort();
-  //   lexer.scan_errors();
-  //   // The '???' characters is an error
-  //   REQUIRE(lexer.error_nodes.size() == 1);
-  //   CHECK(lexer.error_nodes[0].p == 24);
-  //   CHECK(lexer.error_nodes[0].n == 3);
-  // }
+    lexer.scan(token::whitespace, str);
+    lexer.scan(token::if_statement, str);
+    lexer.scan(token::integer, str);
+    lexer.scan(token::identifier, str);
+    lexer.sort();
+    lexer.scan_errors();
+    // The '???' characters is an error
+    REQUIRE(lexer.error_nodes.size() == 1);
+    CHECK(lexer.error_nodes[0].p == 24);
+    CHECK(lexer.error_nodes[0].n == 3);
+  }
 }
