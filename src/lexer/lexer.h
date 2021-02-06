@@ -28,7 +28,7 @@ struct generic_lexer_node {
   // The sorting is based on the position and the
   // length of the nodes
   friend bool operator<(const generic_lexer_node &a, const generic_lexer_node &b) {
-    return (a.p < b.p) || ((a.p == b.p) && (a.ri < b.ri));
+    return (a.p < b.p) || ((a.p == b.p) && (a.n < b.n)) || ((a.p == b.p) && (a.n == b.n) && (a.ri > b.ri));
   }
   friend bool operator>(const generic_lexer_node &a, const generic_lexer_node &b) {
     return b < a;
@@ -88,15 +88,27 @@ class generic_lexer {
       return;
     }
     std::sort(this->nodes.begin(), this->nodes.end());
-    generic_lexer_node prev = this->nodes[0];
-    auto end  = std::remove_if(this->nodes.begin() + 1, this->nodes.end(), [&prev](const generic_lexer_node &cur) {
-      bool remove = cur.p < (prev.p + prev.n);
-      if (!remove) {
-        prev = cur;
+  }
+
+  /**
+   * Removes nodes that overlap other nodes.
+   * The nodes are assumed to have already been sorted.
+   */
+  void evict_overlapses() {
+    auto it = this->nodes.rbegin();
+    auto end = this->nodes.rend();
+    std::size_t threshold = std::numeric_limits<std::size_t>::max();
+
+    auto new_end = std::remove_if(it, end, [&threshold](const generic_lexer_node& node) {
+      bool remove = false;
+      if((node.p + node.n) > threshold) {
+        remove = true;
+      } else {
+        threshold = node.p;
       }
       return remove;
     });
-    this->nodes.erase(end, this->nodes.end());
+    this->nodes.erase(this->nodes.rend().base(), new_end.base());
   }
 
   /**
@@ -163,6 +175,7 @@ class generic_lexer {
     // Sort the container. This will pick the longest spanning
     // nodes for each character position in the input string
     sort();
+    evict_overlapses();
 
     // Even though we may output valid tokens, the
     // input string may be inconsistent or contain

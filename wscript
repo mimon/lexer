@@ -1,5 +1,6 @@
 out = 'build'
 APPNAME = 'lexer'
+ENABLE_DEBUG_SYMBOLS = '-g'
 
 def options(opt):
 	opt.load('compiler_cxx compiler_c')
@@ -18,5 +19,5 @@ def build(bld):
 		target='tests',
 		source=bld.path.ant_glob('src/lexer/tests/*.cpp'),
 		includes='src',
-		cxxflags='-std=c++11'
+		cxxflags=['-std=c++11', ENABLE_DEBUG_SYMBOLS]
 	)

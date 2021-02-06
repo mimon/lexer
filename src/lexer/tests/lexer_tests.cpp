@@ -7,15 +7,6 @@
 ;
 using namespace std;
 
-enum token {
-  if_statement,
-  integer,
-  identifier,
-  whitespace,
-  number_of_tokens
-};
-
-
 TEST_CASE("lexer Basics") {
 
   SECTION("Understanding c++ regexs") {
@@ -29,7 +20,62 @@ TEST_CASE("lexer Basics") {
   }
 }
 
+SCENARIO("When multiple regexs matches a string then multiple nodes are "
+        "created which may overlap other nodes. No overlaps may occurr") {
+  GIVEN("A language") {
+    lexer::regex_vector tokens {
+      regex("Aaa"),
+      regex("(\\w+)")
+    };
+
+    lexer::generic_lexer lexer(tokens);
+
+    GIVEN("A string that multiple regexs will match") {
+      string text("Aaabbb Aaa");
+
+      WHEN("Tokenizing the text") {
+        lexer.tokenize(text);
+
+        REQUIRE(lexer.nodes.size() == 2);
+
+        THEN("The first token is produced by the second regex because its match "
+            "spans over a longer length than the first regex's match") {
+          CHECK(lexer.nodes[0].ri == 1);
+        }
+
+        THEN("The second token is produced by the first regex because its index "
+             "in the token list is lower (higher priority) than the other") {
+          CHECK(lexer.nodes[1].ri == 0);
+        }
+      }
+    }
+
+    // WHEN("Evicting all nodes which overlap other nodes") {
+    //     lexer.evict_overlapses();
+
+    //     THEN("All nodes which overlap another node with higher weight are gone") {
+    //       REQUIRE(lexer.nodes.size() == 3);
+    //       lexer::generic_lexer_node n1 = lexer.nodes[0];
+    //       lexer::generic_lexer_node n2 = lexer.nodes[1];
+    //       lexer::generic_lexer_node n3 = lexer.nodes[2];
+
+    //       CHECK(n1.ri == token::if_statement);
+    //       CHECK(n2.ri == token::whitespace);
+    //       CHECK(n3.ri == token::identifier);
+    //     }
+    //   }
+  }
+}
+
 TEST_CASE("A basic language") {
+  enum token {
+    if_statement,
+    integer,
+    identifier,
+    whitespace,
+    number_of_tokens
+  };
+
   lexer::regex_vector tokens(number_of_tokens);
 
   tokens[token::whitespace] = regex("\\s+");
@@ -97,33 +143,48 @@ TEST_CASE("A basic language") {
     CHECK(line == 3);
   }
 
-  SECTION("sort") {
+  GIVEN("A string which contains keywords that matches multiple reg exs") {
     string              script = "if thenter";
     REQUIRE(lexer.nodes.size() == 0);
-    lexer.scan(token::whitespace, script);
-    lexer.scan(token::if_statement, script);
-    lexer.scan(token::identifier, script);
-    REQUIRE(lexer.nodes.size() == 4);
 
-    lexer.sort();
+    WHEN("Scanning for certain tokens") {
+      lexer.scan(token::whitespace, script);
+      lexer.scan(token::if_statement, script);
+      lexer.scan(token::identifier, script);
 
-    CHECK(lexer.nodes.size() == 3);
+      THEN("Multiple regexs matches has been found") {
+        REQUIRE(lexer.nodes.size() == 4);
+      }
 
-    lexer::generic_lexer_node n1 = lexer.nodes[0];
-    lexer::generic_lexer_node n2 = lexer.nodes[1];
-    lexer::generic_lexer_node n3 = lexer.nodes[2];
+      WHEN("Sorting the matches by weight") {
+        lexer.sort();
 
-    CHECK(n1.p == 0);
-    CHECK(n1.n == 2);
-    CHECK(n1.ri == token::if_statement);
+        THEN("Nodes are sorted in correct order") {
+          REQUIRE(lexer.nodes.size() == 4);
 
-    CHECK(n2.p == 2);
-    CHECK(n2.n == 1);
-    CHECK(n2.ri == token::whitespace);
+          lexer::generic_lexer_node n1 = lexer.nodes[0];
+          lexer::generic_lexer_node n2 = lexer.nodes[1];
+          lexer::generic_lexer_node n3 = lexer.nodes[2];
+          lexer::generic_lexer_node n4 = lexer.nodes[3];
 
-    CHECK(n3.p == 3);
-    CHECK(n3.n == 7);
-    CHECK(n3.ri == token::identifier);
+          CHECK(n1.p == 0);
+          CHECK(n1.n == 2);
+          CHECK(n1.ri == token::if_statement);
+
+          CHECK(n2.p == 0);
+          CHECK(n2.n == 2);
+          CHECK(n2.ri == token::identifier);
+
+          CHECK(n3.p == 2);
+          CHECK(n3.n == 1);
+          CHECK(n3.ri == token::whitespace);
+
+          CHECK(n4.p == 3);
+          CHECK(n4.n == 7);
+          CHECK(n4.ri == token::identifier);
+        }
+      }
+    }
   }
 
   SECTION("sort") {
@@ -220,6 +281,7 @@ TEST_CASE("A basic language") {
     lexer.scan(token::integer, str);
     lexer.scan(token::identifier, str);
     lexer.sort();
+    lexer.evict_overlapses();
     lexer.scan_errors();
     // The '???' characters is an error
     REQUIRE(lexer.error_nodes.size() == 1);
