@@ -21,3 +21,11 @@ def build(bld):
 		includes='src',
 		cxxflags=['-std=c++11', ENABLE_DEBUG_SYMBOLS]
 	)
+
+	bld.stlib(
+		target='lexer',
+		source=bld.path.ant_glob('src/lexer/*.cpp'),
+		includes='src',
+		export_includes='src',
+		cxxflags='-std=c++11'
+	)
