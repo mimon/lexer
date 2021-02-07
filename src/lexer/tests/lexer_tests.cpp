@@ -25,18 +25,19 @@ SCENARIO("When multiple regexs matches a string then multiple nodes are "
   GIVEN("A language") {
     lexer::regex_vector tokens {
       regex("Aaa"),
-      regex("(\\w+)")
+      regex("(\\w+)"),
+      regex("(\\s+)"),
     };
 
     lexer::generic_lexer lexer(tokens);
 
     GIVEN("A string that multiple regexs will match") {
-      string text("Aaabbb Aaa");
+      string text("Aaabbb Aaa bbbAaa");
 
       WHEN("Tokenizing the text") {
         lexer.tokenize(text);
 
-        REQUIRE(lexer.nodes.size() == 2);
+        REQUIRE(lexer.nodes.size() == 6); // includes white space
 
         THEN("The first token is produced by the second regex because its match "
             "spans over a longer length than the first regex's match") {

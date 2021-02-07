@@ -24,11 +24,12 @@ struct generic_lexer_node {
   std::string::size_type p;   // index position of where it starts
   std::string::size_type n;   // length of the substring
   std::size_t            ri;  // the regex index of which regex it was generated from
+  std::string::size_type e;   // index position of where it ends
   // Operators used for sorting nodes.
   // The sorting is based on the position and the
   // length of the nodes
   friend bool operator<(const generic_lexer_node &a, const generic_lexer_node &b) {
-    return (a.p < b.p) || ((a.p == b.p) && (a.n < b.n)) || ((a.p == b.p) && (a.n == b.n) && (a.ri > b.ri));
+    return (a.e < b.e) || ((a.e == b.e) && (a.n < b.n)) || ((a.e == b.e) && (a.n == b.n) && (a.ri > b.ri));
   }
   friend bool operator>(const generic_lexer_node &a, const generic_lexer_node &b) {
     return b < a;
@@ -74,6 +75,7 @@ class generic_lexer {
       n.p  = match.position();
       n.n  = match.length();
       n.ri = i;
+      n.e = n.p + n.n;
       this->nodes.push_back(n);
     }
   }
