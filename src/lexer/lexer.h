@@ -65,12 +65,12 @@ class generic_lexer {
    */
   void scan(std::size_t i, const std::string &s) {
     const std::regex &regex = this->regexs[i];
-    auto        begin =
+    auto        iter =
         std::sregex_iterator(s.begin(), s.end(), regex);
     auto end = std::sregex_iterator();
 
-    for (std::sregex_iterator i2 = begin; i2 != end; ++i2) {
-      std::smatch match = *i2;
+    for (; iter != end; ++iter) {
+      std::smatch match = *iter;
       generic_lexer_node        n;
       n.p  = match.position();
       n.n  = match.length();
