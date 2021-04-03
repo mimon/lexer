@@ -1,5 +1,6 @@
 out = 'build'
 APPNAME = 'lexer'
+ENABLE_DEBUG_SYMBOLS = '-g'
 
 def options(opt):
 	opt.load('compiler_cxx compiler_c')
