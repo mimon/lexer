@@ -190,7 +190,7 @@ class generic_lexer {
     this->error_nodes.clear();
   }
 
-  const regex_vector&    regexs;
+  regex_vector    regexs;
   node_vector nodes, error_nodes;
 };
 }

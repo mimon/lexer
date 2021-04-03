@@ -19,6 +19,7 @@ def build(bld):
 		target='tests',
 		source=bld.path.ant_glob('src/lexer/tests/*.cpp'),
 		includes='src',
+		use='lexer',
 		cxxflags=['-std=c++11', ENABLE_DEBUG_SYMBOLS]
 	)
 
@@ -27,5 +28,5 @@ def build(bld):
 		source=bld.path.ant_glob('src/lexer/*.cpp'),
 		includes='src',
 		export_includes='src',
-		cxxflags='-std=c++11'
+		cxxflags=['-std=c++11', ENABLE_DEBUG_SYMBOLS]
 	)
